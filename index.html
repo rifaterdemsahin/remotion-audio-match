@@ -19,6 +19,7 @@
     code{background:var(--card);border:1px solid var(--line);padding:1px 5px;border-radius:4px}
     pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;font-size:.85rem}
     .mut{color:var(--mut)}
+    table{border-collapse:collapse;width:100%;font-size:.9rem;margin:12px 0}th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
   </style>
 </head>
 <body>
@@ -28,10 +29,26 @@
 
   <div id="app"></div>
 
+  <h2>How the shots are lined up (two tactics, cross-checked)</h2>
+  <p>Both clips recorded the same speech, so the audio is the sync reference. I used two independent tactics and only trusted the result because they agree.</p>
+  <table>
+    <tr><th>Tactic</th><th>What it does</th><th>Result</th></tr>
+    <tr><td><b>1. Transcription</b></td><td>Whisper (<code>large-v3-turbo</code>, run locally) transcribes each clip with word timestamps. Every word spoken in both clips gives a vote <code>tA − tB</code>; the tallest cluster wins.</td><td>−9.78 s (±0.25)<br><span class="mut">39 of 89 matches agree</span></td></tr>
+    <tr><td><b>2. Waveform</b></td><td>Cross-correlates the raw audio (coarse pass on loudness, then fine pass on samples). Then a <b>check</b>: correlate 2 s windows across the whole overlap and confirm every window gives the same lag.</td><td>−9.782 s<br><span class="mut">18/18 windows, ±1 ms, no drift</span></td></tr>
+  </table>
+  <p><b>Why both?</b> Transcription understands <i>what</i> was said but is only accurate to ~0.25 s and fails on noisy speech (the small model produced gibberish). The waveform is accurate to about a millisecond but cannot tell a real match from a lucky one on its own. Transcription tells you roughly where; the waveform tells you exactly; agreement proves it. The windowed check also guards against <b>drift</b>, which matters here because the clips are 30 and 60 fps phone/screen recordings.</p>
+  <p><b>Reproduce it:</b></p>
+  <pre>whisper shot-a.wav shot-b.wav --model large-v3-turbo --word_timestamps True --output_format json
+npm run sync:transcript   # tactic 1 → -9.78 s
+npm run sync:waveform     # tactic 2 → -9.782 s
+npm run sync:verify       # window-by-window check → no drift
+# then put the number in src/sync.ts; Remotion does the rest</pre>
+  <p><b>Other things I did:</b> started with the small Whisper model, saw it fail, and switched to <code>large-v3-turbo</code>; used the loudness-envelope pass to narrow the search before the sample-level pass; and rounded the final offset to whole frames (−293 @30fps), since Remotion places clips on frames.</p>
+
   <h2>How it works</h2>
   <p>Everything happens inside the Remotion composition (<code>src/Multicam.tsx</code>); this page only embeds it with <code>@remotion/player</code>.</p>
   <ul>
-    <li><b>Line-up (automatic):</b> <code>scripts/sync.mjs</code> cross-correlates the two clips’ audio and found that <b>B started 9.78s before A</b> (peak 4× stronger than any rival). That number lives in <code>src/sync.ts</code>; the composition places each clip in a <code>&lt;Sequence from=…&gt;</code> accordingly, so the picture and sound of both shots are aligned.</li>
+    <li><b>Line-up:</b> the measured offset (<b>B started 9.78 s before A</b>, see above) lives in <code>src/sync.ts</code>. The composition places each clip in a <code>&lt;Sequence from=…&gt;</code> accordingly, so picture and sound of both shots are aligned.</li>
     <li><b>Cut list:</b> a <code>cuts</code> prop (<code>{at, shot, audio}</code>) says which shot is visible and which audio is heard from each moment. Default: B until A begins, cut to A, back to B when A ends, with B’s audio throughout. Edit it live in Remotion Studio’s props panel.</li>
     <li><b>Both clips always play</b>, so cuts are instant: shot = <code>opacity</code>, audio = <code>volume</code>.</li>
     <li><b>Buttons above</b> temporarily override the cut list so you can audition any shot/audio combination.</li>
