@@ -1,90 +1,58 @@
 import {Player, PlayerRef} from '@remotion/player';
 import {createRoot} from 'react-dom/client';
-import {useEffect, useRef} from 'react';
-import {FPS, Multicam, MulticamProps, AudioId, ShotId, defaultProps, totalFrames} from './Multicam';
+import {useEffect, useRef, useState} from 'react';
+import {AudioId, FPS, Multicam, ShotId, TOTAL_FRAMES, defaultProps} from './Multicam';
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-
-const state: MulticamProps = {...defaultProps};
-let setProps: (p: MulticamProps) => void = () => {};
+const Pick = <T extends string>({label, value, items, onChange}: {label: string; value: T; items: [T, string][]; onChange: (v: T) => void}) => (
+  <div className="row">
+    <label className="t">{label}</label>
+    {items.map(([v, text]) => (
+      <button key={v} className={v === value ? 'on' : ''} onClick={() => onChange(v)}>{text}</button>
+    ))}
+  </div>
+);
 
 const App = () => {
   const ref = useRef<PlayerRef>(null);
+  const [shot, setShot] = useState<ShotId | 'auto'>('auto');
+  const [audio, setAudio] = useState<AudioId | 'auto'>('auto');
+
   useEffect(() => {
-    (window as any).__player = ref.current;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'BUTTON' && e.key === ' ') return;
+      const k = e.key.toLowerCase();
+      if (k === '1') setShot('A'); else if (k === '2') setShot('B'); else if (k === '0') setShot('auto');
+      else if (k === 'q') setAudio('A'); else if (k === 'w') setAudio('B'); else if (k === 'e') setAudio('none'); else if (k === 'r') setAudio('auto');
+      else if (e.key === ' ') { e.preventDefault(); ref.current?.toggle(); }
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
   }, []);
+
   return (
-    <Player
-      ref={ref}
-      component={Multicam}
-      inputProps={{...state}}
-      durationInFrames={totalFrames(state.offsetB)}
-      fps={FPS}
-      compositionWidth={1024}
-      compositionHeight={576}
-      style={{width: '100%', height: '100%'}}
-      controls
-      clickToPlay
-      acknowledgeRemotionLicense
-    />
+    <div className="card">
+      <div id="player">
+        <Player
+          ref={ref}
+          component={Multicam}
+          inputProps={{...defaultProps, forceShot: shot, forceAudio: audio}}
+          durationInFrames={TOTAL_FRAMES}
+          fps={FPS}
+          compositionWidth={1024}
+          compositionHeight={576}
+          style={{width: '100%', height: '100%'}}
+          controls
+          clickToPlay
+          acknowledgeRemotionLicense
+        />
+      </div>
+      <Pick label="Shot" value={shot} onChange={setShot} items={[['auto', 'Auto (cut list)'], ['A', 'Shot A'], ['B', 'Shot B']]} />
+      <Pick label="Audio" value={audio} onChange={setAudio} items={[['auto', 'Auto (cut list)'], ['A', 'Audio A'], ['B', 'Audio B'], ['none', 'Mute']]} />
+      <p className="mut" style={{margin: '4px 0 0'}}>
+        Keys: <code>1</code>/<code>2</code>/<code>0</code> shot A/B/auto · <code>Q</code>/<code>W</code>/<code>E</code>/<code>R</code> audio A/B/mute/auto · <code>Space</code> play/pause.
+      </p>
+    </div>
   );
 };
 
-const root = createRoot($('player'));
-const render = () => root.render(<App key={state.offsetB} />);
-// key on offset => remount with the new duration; keep playhead
-const rerender = () => {
-  const p = (window as any).__player as PlayerRef | null;
-  const frame = p?.getCurrentFrame() ?? 0;
-  const playing = p?.isPlaying() ?? false;
-  render();
-  setTimeout(() => {
-    const np = (window as any).__player as PlayerRef;
-    np?.seekTo(Math.min(frame, totalFrames(state.offsetB) - 1));
-    if (playing) np?.play();
-  }, 50);
-};
-render();
-
-const mk = (box: HTMLElement, items: [string, string][], get: () => string, set: (v: string) => void) => {
-  const draw = () => {
-    box.innerHTML = '';
-    items.forEach(([v, label]) => {
-      const b = document.createElement('button');
-      b.textContent = label;
-      b.className = get() === v ? 'on' : '';
-      b.onclick = () => {set(v); draw();};
-      box.appendChild(b);
-    });
-  };
-  draw();
-  return draw;
-};
-
-// Changing shot/audio only re-renders props; the player keeps playing.
-const update = () => {
-  const p = (window as any).__player as PlayerRef | null;
-  // Player reads inputProps on re-render, so re-render the same tree (no key change)
-  root.render(<App key={state.offsetB} />);
-  void p;
-};
-
-const drawShot = mk($('shotBtns'), [['A', 'Shot A'], ['B', 'Shot B']], () => state.shot, v => {state.shot = v as ShotId; state.audio = state.audio; update();});
-const drawAudio = mk($('audioBtns'), [['A', 'Audio A'], ['B', 'Audio B'], ['none', 'Mute']], () => state.audio, v => {state.audio = v as AudioId; update();});
-
-$<HTMLInputElement>('offset').oninput = e => {
-  const s = parseFloat((e.target as HTMLInputElement).value);
-  state.offsetB = Math.round(s * FPS);
-  $('offsetLabel').textContent = s.toFixed(2) + 's';
-  rerender();
-};
-
-addEventListener('keydown', e => {
-  const p = (window as any).__player as PlayerRef | null;
-  if (e.key === '1') {state.shot = 'A'; drawShot(); update();}
-  else if (e.key === '2') {state.shot = 'B'; drawShot(); update();}
-  else if (e.key.toLowerCase() === 'q') {state.audio = 'A'; drawAudio(); update();}
-  else if (e.key.toLowerCase() === 'w') {state.audio = 'B'; drawAudio(); update();}
-  else if (e.key.toLowerCase() === 'e') {state.audio = 'none'; drawAudio(); update();}
-  else if (e.key === ' ' && (e.target as HTMLElement).tagName !== 'BUTTON') {e.preventDefault(); p?.toggle();}
-});
+createRoot(document.getElementById('app')!).render(<App />);

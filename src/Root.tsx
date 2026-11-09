@@ -1,5 +1,5 @@
 import {Composition} from 'remotion';
-import {FPS, Multicam, defaultProps, totalFrames} from './Multicam';
+import {FPS, Multicam, TOTAL_FRAMES, defaultProps} from './Multicam';
 
 export const Root = () => (
   <Composition
@@ -8,7 +8,7 @@ export const Root = () => (
     width={1024}
     height={576}
     fps={FPS}
-    durationInFrames={totalFrames(0)}
+    durationInFrames={TOTAL_FRAMES}
     defaultProps={defaultProps}
   />
 );

@@ -24,33 +24,22 @@
 <body>
 <main>
   <h1>Multicam + audio switcher in Remotion</h1>
-  <p class="mut">Two shots on one shared timeline. Cut between them and choose the audio, live, while it plays.</p>
+  <p class="mut">Two shots lined up on one timeline by their shared audio. Cut between them and choose the audio.</p>
 
-  <div class="card">
-    <div id="player"></div>
-    <div class="row"><label class="t">Shot</label><span id="shotBtns"></span></div>
-    <div class="row"><label class="t">Audio</label><span id="audioBtns"></span></div>
-    <div class="row"><label class="t">B offset</label>
-      <input id="offset" type="range" min="-10" max="10" step="0.05" value="0" style="flex:1;min-width:160px">
-      <span id="offsetLabel">0.00s</span></div>
-    <p class="mut" style="margin:4px 0 0">Keys: <code>1</code>/<code>2</code> shot A/B · <code>Q</code>/<code>W</code>/<code>E</code> audio A/B/none · <code>Space</code> play/pause.
-    Use the offset to line up the shots until the audio matches the picture.</p>
-  </div>
+  <div id="app"></div>
 
   <h2>How it works</h2>
-  <p>Remotion renders video as React. Here a single composition (<code>src/Multicam.tsx</code>) mounts <b>both</b> clips at all times, each inside a <code>&lt;Sequence&gt;</code>, so they play frame-locked together:</p>
+  <p>Everything happens inside the Remotion composition (<code>src/Multicam.tsx</code>); this page only embeds it with <code>@remotion/player</code>.</p>
   <ul>
-    <li><b>Shot switching</b> changes only the <code>opacity</code> of each layer (the “cut”). Nothing reloads, so cuts are instant.</li>
-    <li><b>Audio selection</b> changes only the <code>volume</code> prop (1 or 0) of each clip’s own audio track. You can see shot B while hearing A.</li>
-    <li><b>Lining up</b>: <code>offsetB</code> (frames) moves B’s <code>&lt;Sequence from&gt;</code> relative to A. Duration is recomputed from the offset.</li>
-    <li><b>Live preview</b>: <code>@remotion/player</code> embeds the composition in a normal web page and re-renders it as props change. This page is a static Vite build hosted on GitHub Pages.</li>
-    <li><b>Export</b>: the same composition renders to mp4 with <code>npm run render</code> (props such as <code>--props='{"shot":"B","audio":"A"}'</code>).</li>
+    <li><b>Line-up (automatic):</b> <code>scripts/sync.mjs</code> cross-correlates the two clips’ audio and found that <b>B started 9.78s before A</b> (peak 4× stronger than any rival). That number lives in <code>src/sync.ts</code>; the composition places each clip in a <code>&lt;Sequence from=…&gt;</code> accordingly, so the picture and sound of both shots are aligned.</li>
+    <li><b>Cut list:</b> a <code>cuts</code> prop (<code>{at, shot, audio}</code>) says which shot is visible and which audio is heard from each moment. Default: B until A begins, cut to A, back to B when A ends, with B’s audio throughout. Edit it live in Remotion Studio’s props panel.</li>
+    <li><b>Both clips always play</b>, so cuts are instant: shot = <code>opacity</code>, audio = <code>volume</code>.</li>
+    <li><b>Buttons above</b> temporarily override the cut list so you can audition any shot/audio combination.</li>
+    <li><b>Export:</b> <code>npm run render</code> writes the edit to <code>out/multicam.mp4</code>; <code>npm run studio</code> opens Remotion Studio.</li>
   </ul>
-  <pre>&lt;Sequence from={shift + offsetB} durationInFrames={DUR_B}&gt;
-  &lt;Video src={staticFile('shot-b.mp4')}
-         volume={audio === 'B' ? 1 : 0}
-         style={{opacity: shot === 'B' ? 1 : 0}} /&gt;
-&lt;/Sequence&gt;</pre>
+  <pre>const offsetB = Math.round(B_OFFSET_SECONDS * FPS);   // -293 frames
+const START_A = Math.max(0, -offsetB);                // A begins 293f in
+&lt;Sequence from={START_A} durationInFrames={DUR_A}&gt;…&lt;/Sequence&gt;</pre>
   <p class="mut">Sources: shot A 1024×576 @30fps, 19.4s · shot B 736×480 @60fps, 37.7s (fit with <code>object-fit: contain</code>). Both include AAC audio.</p>
 </main>
 <script type="module" src="/src/main.tsx"></script>
