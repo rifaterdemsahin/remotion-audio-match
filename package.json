@@ -9,7 +9,8 @@
     "render": "remotion render src/remotion-entry.ts Multicam out/multicam.mp4",
     "sync:transcript": "node scripts/transcript-sync.mjs data/transcripts/shot-a.json data/transcripts/shot-b.json",
     "sync:waveform": "node scripts/sync.mjs",
-    "sync:verify": "node scripts/waveform-check.mjs -9.7815"
+    "sync:verify": "node scripts/waveform-check.mjs -9.7815",
+    "render:pip": "remotion render src/remotion-entry.ts PiP out/pip.mp4"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.542",

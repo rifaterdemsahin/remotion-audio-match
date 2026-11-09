@@ -2,6 +2,7 @@ import {Player, PlayerRef} from '@remotion/player';
 import {createRoot} from 'react-dom/client';
 import {useEffect, useRef, useState} from 'react';
 import {AudioId, FPS, Multicam, ShotId, TOTAL_FRAMES, defaultProps} from './Multicam';
+import {PiP, pipDefaults} from './PiP';
 
 const Pick = <T extends string>({label, value, items, onChange}: {label: string; value: T; items: [T, string][]; onChange: (v: T) => void}) => (
   <div className="row">
@@ -16,6 +17,7 @@ const App = () => {
   const ref = useRef<PlayerRef>(null);
   const [shot, setShot] = useState<ShotId | 'auto'>('auto');
   const [audio, setAudio] = useState<AudioId | 'auto'>('auto');
+  const [mode, setMode] = useState<'cut' | 'pip'>('pip');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -34,8 +36,9 @@ const App = () => {
       <div id="player">
         <Player
           ref={ref}
-          component={Multicam}
-          inputProps={{...defaultProps, forceShot: shot, forceAudio: audio}}
+          key={mode}
+          component={(mode === 'pip' ? PiP : Multicam) as any}
+          inputProps={mode === 'pip' ? {...pipDefaults, audio: audio === 'auto' ? pipDefaults.audio : audio} : {...defaultProps, forceShot: shot, forceAudio: audio}}
           durationInFrames={TOTAL_FRAMES}
           fps={FPS}
           compositionWidth={1024}
@@ -46,7 +49,8 @@ const App = () => {
           acknowledgeRemotionLicense
         />
       </div>
-      <Pick label="Shot" value={shot} onChange={setShot} items={[['auto', 'Auto (cut list)'], ['A', 'Shot A'], ['B', 'Shot B']]} />
+      <Pick label="Mode" value={mode} onChange={setMode} items={[['pip', 'Picture-in-picture'], ['cut', 'Cut between shots']]} />
+      {mode === 'cut' && <Pick label="Shot" value={shot} onChange={setShot} items={[['auto', 'Auto (cut list)'], ['A', 'Shot A'], ['B', 'Shot B']]} />}
       <Pick label="Audio" value={audio} onChange={setAudio} items={[['auto', 'Auto (cut list)'], ['A', 'Audio A'], ['B', 'Audio B'], ['none', 'Mute']]} />
       <p className="mut" style={{margin: '4px 0 0'}}>
         Keys: <code>1</code>/<code>2</code>/<code>0</code> shot A/B/auto · <code>Q</code>/<code>W</code>/<code>E</code>/<code>R</code> audio A/B/mute/auto · <code>Space</code> play/pause.
