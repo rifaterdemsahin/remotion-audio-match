@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Remotion Multicam Audio Switcher</title>
+  <style>:root{--bg:#0f1115;--fg:#e8eaed;--mut:#9aa0a6;--card:#181b22;--acc:#4f8cff;--line:#2a2f3a}@media (prefers-color-scheme:light){:root{--bg:#f6f7f9;--fg:#15171c;--mut:#5f6368;--card:#fff;--acc:#2563eb;--line:#d8dbe2}}*{box-sizing:border-box}body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.55 system-ui,sans-serif}main{max-width:960px;margin:0 auto;padding:24px 16px 64px}h1{margin:.2em 0;font-size:1.6rem}h2{margin-top:2em;font-size:1.15rem}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:16px 0;padding:16px}.row{flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0;display:flex}.row label.t{min-width:70px;color:var(--mut);font-size:.9rem}button{color:var(--fg);border:1px solid var(--line);font:inherit;cursor:pointer;background:0 0;border-radius:8px;padding:8px 14px}button.on{background:var(--acc);border-color:var(--acc);color:#fff}#player{aspect-ratio:1024/576;background:#000;border-radius:8px;width:100%;overflow:hidden}code{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:.85rem;overflow:auto}.mut{color:var(--mut)}</style>
+  <script type="module" crossorigin src="./assets/index-DuxOAwi9.js"></script>
+</head>
+<body>
+<main>
+  <h1>Multicam + audio switcher in Remotion</h1>
+  <p class="mut">Two shots on one shared timeline. Cut between them and choose the audio, live, while it plays.</p>
+
+  <div class="card">
+    <div id="player"></div>
+    <div class="row"><label class="t">Shot</label><span id="shotBtns"></span></div>
+    <div class="row"><label class="t">Audio</label><span id="audioBtns"></span></div>
+    <div class="row"><label class="t">B offset</label>
+      <input id="offset" type="range" min="-10" max="10" step="0.05" value="0" style="flex:1;min-width:160px">
+      <span id="offsetLabel">0.00s</span></div>
+    <p class="mut" style="margin:4px 0 0">Keys: <code>1</code>/<code>2</code> shot A/B · <code>Q</code>/<code>W</code>/<code>E</code> audio A/B/none · <code>Space</code> play/pause.
+    Use the offset to line up the shots until the audio matches the picture.</p>
+  </div>
+
+  <h2>How it works</h2>
+  <p>Remotion renders video as React. Here a single composition (<code>src/Multicam.tsx</code>) mounts <b>both</b> clips at all times, each inside a <code>&lt;Sequence&gt;</code>, so they play frame-locked together:</p>
+  <ul>
+    <li><b>Shot switching</b> changes only the <code>opacity</code> of each layer (the “cut”). Nothing reloads, so cuts are instant.</li>
+    <li><b>Audio selection</b> changes only the <code>volume</code> prop (1 or 0) of each clip’s own audio track. You can see shot B while hearing A.</li>
+    <li><b>Lining up</b>: <code>offsetB</code> (frames) moves B’s <code>&lt;Sequence from&gt;</code> relative to A. Duration is recomputed from the offset.</li>
+    <li><b>Live preview</b>: <code>@remotion/player</code> embeds the composition in a normal web page and re-renders it as props change. This page is a static Vite build hosted on GitHub Pages.</li>
+    <li><b>Export</b>: the same composition renders to mp4 with <code>npm run render</code> (props such as <code>--props='{"shot":"B","audio":"A"}'</code>).</li>
+  </ul>
+  <pre>&lt;Sequence from={shift + offsetB} durationInFrames={DUR_B}&gt;
+  &lt;Video src={staticFile('shot-b.mp4')}
+         volume={audio === 'B' ? 1 : 0}
+         style={{opacity: shot === 'B' ? 1 : 0}} /&gt;
+&lt;/Sequence&gt;</pre>
+  <p class="mut">Sources: shot A 1024×576 @30fps, 19.4s · shot B 736×480 @60fps, 37.7s (fit with <code>object-fit: contain</code>). Both include AAC audio.</p>
+</main>
+</body>
+</html>
