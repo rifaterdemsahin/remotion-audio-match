@@ -5,6 +5,8 @@
 Two recordings of the same event, lined up **inside Remotion** by their shared audio, shown as
 picture-in-picture (the short shot activates inside the long one) or as a cut list where you pick the shot and the audio.
 
+🎥 Exported result: [`docs/video/PiP.mp4`](https://github.com/rifaterdemsahin/remotion-audio-match/blob/main/docs/video/PiP.mp4)
+
 ![Remotion Studio timeline](public/images/remotion-studio-pip.jpg)
 
 ## Run it

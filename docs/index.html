@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Remotion Multicam Audio Switcher</title>
-  <style>:root{--bg:#0f1115;--fg:#e8eaed;--mut:#9aa0a6;--card:#181b22;--acc:#4f8cff;--line:#2a2f3a}@media (prefers-color-scheme:light){:root{--bg:#f6f7f9;--fg:#15171c;--mut:#5f6368;--card:#fff;--acc:#2563eb;--line:#d8dbe2}}*{box-sizing:border-box}body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.55 system-ui,sans-serif}main{max-width:960px;margin:0 auto;padding:24px 16px 64px}h1{margin:.2em 0;font-size:1.6rem}h2{margin-top:2em;font-size:1.15rem}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:16px 0;padding:16px}.row{flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0;display:flex}.row label.t{min-width:70px;color:var(--mut);font-size:.9rem}button{color:var(--fg);border:1px solid var(--line);font:inherit;cursor:pointer;background:0 0;border-radius:8px;padding:8px 14px}button.on{background:var(--acc);border-color:var(--acc);color:#fff}#player{aspect-ratio:1024/576;background:#000;border-radius:8px;width:100%;overflow:hidden}code{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:.85rem;overflow:auto}.mut{color:var(--mut)}figure{margin:16px 0}figure img{border:1px solid var(--line);border-radius:10px;width:100%}figcaption{color:var(--mut);margin-top:6px;font-size:.9rem}#prompt{white-space:pre-wrap;max-height:520px}table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.9rem}th,td{border:1px solid var(--line);text-align:left;vertical-align:top;padding:8px}</style>
+  <style>:root{--bg:#0f1115;--fg:#e8eaed;--mut:#9aa0a6;--card:#181b22;--acc:#4f8cff;--line:#2a2f3a}@media (prefers-color-scheme:light){:root{--bg:#f6f7f9;--fg:#15171c;--mut:#5f6368;--card:#fff;--acc:#2563eb;--line:#d8dbe2}}*{box-sizing:border-box}body{background:var(--bg);color:var(--fg);margin:0;font:16px/1.55 system-ui,sans-serif}main{max-width:960px;margin:0 auto;padding:24px 16px 64px}h1{margin:.2em 0;font-size:1.6rem}h2{margin-top:2em;font-size:1.15rem}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:16px 0;padding:16px}.row{flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0;display:flex}.row label.t{min-width:70px;color:var(--mut);font-size:.9rem}button{color:var(--fg);border:1px solid var(--line);font:inherit;cursor:pointer;background:0 0;border-radius:8px;padding:8px 14px}button.on{background:var(--acc);border-color:var(--acc);color:#fff}#player{aspect-ratio:1024/576;background:#000;border-radius:8px;width:100%;overflow:hidden}code{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:1px 5px}pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:.85rem;overflow:auto}.mut{color:var(--mut)}video.result{aspect-ratio:1024/576;border:1px solid var(--line);background:#000;border-radius:10px;width:100%}ol.steps li{margin:6px 0}figure{margin:16px 0}figure img{border:1px solid var(--line);border-radius:10px;width:100%}figcaption{color:var(--mut);margin-top:6px;font-size:.9rem}#prompt{white-space:pre-wrap;max-height:520px}table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.9rem}th,td{border:1px solid var(--line);text-align:left;vertical-align:top;padding:8px}</style>
   <script type="module" crossorigin src="./assets/index-BR-a53hk.js"></script>
 </head>
 <body>
@@ -35,6 +35,33 @@ npm run sync:waveform     # tactic 2 → -9.782 s
 npm run sync:verify       # window-by-window check → no drift
 # then put the number in src/lib/sync.ts; Remotion does the rest</pre>
   <p><b>Other things I did:</b> started with the small Whisper model, saw it fail, and switched to <code>large-v3-turbo</code>; used the loudness-envelope pass to narrow the search before the sample-level pass; and rounded the final offset to whole frames (−293 @30fps), since Remotion places clips on frames.</p>
+
+  <h2>🎥 The exported result: PiP.mp4</h2>
+  <p>This is the actual file rendered by <code>npm run render:pip</code> (Remotion → H.264/AAC, 1024×576, 30 fps, 37.7 s). Shot B is the base; shot A appears inside it at ~0:09.8 and leaves at ~0:29.2. Source file on GitHub: <a href="https://github.com/rifaterdemsahin/remotion-audio-match/blob/main/docs/video/PiP.mp4"><code>docs/video/PiP.mp4</code></a>.</p>
+  <video class="result" src="./video/PiP.mp4" controls preload="metadata" playsinline></video>
+
+  <h2>🛠️ How to use the prompt to create this</h2>
+  <ol class="steps">
+    <li>📁 <b>Set up the project.</b> Create an empty folder (or repo) and put your two recordings in <code>public/video/</code> as <code>shot-a.mp4</code> and <code>shot-b.mp4</code>. They must share the same speech/audio, otherwise the audio tactics have nothing to match.</li>
+    <li>🤖 <b>Open Claude Code in that folder.</b> It reads <code>CLAUDE.md</code> automatically, which holds the layout, naming pattern and gotchas. Copy <code>CLAUDE.md</code> and <code>prompts/line-up-shots.md</code> from this repo first if you want the same conventions.</li>
+    <li>📋 <b>Paste the prompt</b> (Copy prompt button above). Edit only the file names and which clip should be the base.</li>
+    <li>⚙️ <b>Let it work.</b> Claude installs the npm packages, extracts the audio with ffmpeg, runs both sync tactics, writes the offset to <code>src/lib/sync.ts</code>, builds the <code>PiP</code> and <code>Multicam</code> compositions, renders stills, and starts Remotion Studio.</li>
+    <li>👀 <b>Review the evidence it reports</b>: the offset, the transcript/waveform agreement, the drift check, still frames, the Studio timeline.</li>
+    <li>🎬 <b>Export:</b> <code>npm run render:pip</code> → <code>out/pip.mp4</code>. Copy it to <code>public/video/PiP.mp4</code>, run <code>npm run build</code>, commit and push; GitHub Pages (<code>main</code>, <code>/docs</code>) serves it.</li>
+  </ol>
+
+  <h2>🧰 Skills, plugins and MCP: what is needed (and what is not)</h2>
+  <table>
+    <tr><th>Piece</th><th>Role</th><th>Status</th></tr>
+    <tr><td>🧠 <b>Claude Code</b> built-in tools (Bash, Read, Edit, Write)</td><td>does everything above: installs packages, runs ffmpeg/Whisper/Remotion, edits code, commits, pushes</td><td><b>Required</b>, nothing extra to install</td></tr>
+    <tr><td>🌐 <b>Claude in Chrome</b> (browser extension + MCP, <code>mcp__claude-in-chrome__*</code>)</td><td>opens the built page and Remotion Studio, clicks the controls, takes screenshots, reads console errors. It is how I checked the player on a sub-path and looked at the Studio timeline.</td><td><b>Recommended</b> for verification; not needed to render</td></tr>
+    <tr><td>📜 <b><code>CLAUDE.md</code></b> in the repo</td><td>project memory: conventions, commands, gotchas</td><td><b>Required</b> for repeatable results (included here)</td></tr>
+    <tr><td>🎞️ <b>Remotion best-practices skill</b> (<code>npx skills add remotion-dev/skills</code>)</td><td>teaches Claude Remotion idioms (Sequence, Video, staticFile, rendering)</td><td>Optional. I did not install it for this project</td></tr>
+    <tr><td>🗣️ <b><code>video-transcribe</code> skill</b> (Whisper)</td><td>an alternative way to run tactic 1. I called the <code>whisper</code> CLI directly instead</td><td>Optional</td></tr>
+    <tr><td>🐙 <b><code>gh</code> CLI</b></td><td>push and enable GitHub Pages (<code>gh api …/pages</code>)</td><td>Required for deploy; it is a CLI, not an MCP</td></tr>
+    <tr><td>🚫 <b>Remotion MCP, Figma, Canva, Notion…</b></td><td>not used</td><td>Not needed. Remotion is plain npm packages</td></tr>
+  </table>
+  <p class="mut">In short: Claude Code + the prompt + <code>CLAUDE.md</code> is enough to build it; add Claude in Chrome if you want it to look at the result for you.</p>
 
   <h2>🪟 Picture-in-picture</h2>
   <p>The <code>PiP</code> composition (<code>src/compositions/PiP.tsx</code>) shows both videos at once: the long clip B is the full-frame base, and the shorter clip A sits <b>inside</b> it. A “activates” at its lined-up start (9.78 s): it springs in with a pulsing red <b>SHOT A</b> badge, plays in sync, and shrinks away when it ends at 29.2 s. Props let you change <code>corner</code>, <code>insetWidth</code>, which <code>audio</code> you hear, or swap which clip is the big picture (<code>insetSwapped</code>). Export it with <code>npm run render:pip</code>.</p>
