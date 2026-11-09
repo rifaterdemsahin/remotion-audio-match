@@ -1,11 +1,11 @@
 // Tactic 2 — waveform check. Verifies an offset by correlating short windows of A's audio
 // against B's audio around the predicted position. A true alignment shows the SAME lag in every
 // window; drift or a wrong offset shows scattered/changing lags.
-// Usage: node scripts/waveform-check.mjs <offsetSeconds> [a.mp4] [b.mp4]   (offset = B start rel. to A)
+// Usage: node scripts/sync-verify.mjs <offsetSeconds> [a.mp4] [b.mp4]   (offset = B start rel. to A)
 import {execFileSync} from 'node:child_process';
 
 const off = parseFloat(process.argv[2] ?? '0');
-const [fa = 'public/shot-a.mp4', fb = 'public/shot-b.mp4'] = process.argv.slice(3);
+const [fa = 'public/video/shot-a.mp4', fb = 'public/video/shot-b.mp4'] = process.argv.slice(3);
 const SR = 8000, WIN = 2 * SR, HOP = SR, SEARCH = Math.round(0.3 * SR);
 const pcm = f => { const b = execFileSync('ffmpeg', ['-v', 'error', '-i', f, '-ac', '1', '-ar', String(SR), '-f', 'f32le', '-'], {maxBuffer: 1 << 28}); return new Float32Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.length)); };
 const A = pcm(fa), B = pcm(fb);

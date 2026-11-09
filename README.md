@@ -2,40 +2,36 @@
 
 **▶ Live demo (GitHub Pages): https://rifaterdemsahin.github.io/remotion-audio-match/**
 
-Multicam + audio switcher built with [Remotion](https://remotion.dev). Two shots share one timeline; cut between them and choose which clip's audio you hear.
+Two recordings of the same event, lined up **inside Remotion** by their shared audio, shown as
+picture-in-picture (the short shot activates inside the long one) or as a cut list where you pick the shot and the audio.
 
-- `src/PiP.tsx` – picture-in-picture: shot A activates inside shot B
-- `src/Multicam.tsx` – the composition (both clips always mounted; cut list `cuts` drives shot = opacity and audio = volume; the line-up offset lives in `src/sync.ts`)
-- `npm run dev` – web preview (`@remotion/player`) · `npm run studio` – Remotion Studio · `npm run render` – export mp4
-- `npm run build` – builds the static site into `docs/` (served by GitHub Pages)
+![Remotion Studio timeline](public/images/remotion-studio-pip.jpg)
 
-## How to prompt Claude to line up shots in Remotion (next time)
-
-Give Claude the files and say *what is shared*, *what you want to see*, and *how to prove the sync*. Copy and adapt:
-
-```text
-I added two recordings of the same event to this Remotion project:
-public/shot-a.mp4 and public/shot-b.mp4 (they share the same speech/audio).
-
-1. Line them up INSIDE Remotion, not with a manual slider. Measure the offset with two tactics:
-   a. transcription: run local Whisper (large-v3-turbo, word timestamps) on both and match shared words;
-   b. waveform: cross-correlate the audio, then check 2s windows across the overlap for consistency/drift.
-   Only trust the result if both agree, and tell me the offset, the confidence and anything else you did.
-2. Store the offset in src/sync.ts and place each clip with <Sequence from=...> so the timeline starts
-   at whichever clip began first.
-3. Build a composition where I can see BOTH videos: <the long one> full-frame and <the short one>
-   inset (picture-in-picture) that activates when it starts and disappears when it ends.
-   Also keep a cut-list composition (cuts: {at, shot, audio}) so I can switch shots and pick the audio.
-4. Verify by rendering stills at frames before / during / after the short clip, then open
-   Remotion Studio so I can see the timeline.
-5. Update index.html to explain the process, rebuild into docs/, commit, push, and put the
-   GitHub Pages link in the README.
+## Run it
+```bash
+npm install
+npm run studio        # Remotion Studio: compositions PiP and Multicam, with the timeline
+npm run render:pip    # export out/pip.mp4   (npm run render -> out/multicam.mp4)
+npm run dev           # web preview        · npm run build -> docs/ (GitHub Pages)
 ```
 
-Tips for a good result:
-- **Say the audio is shared.** That is what makes automatic alignment possible; with unrelated audio you'd have to sync by a visual cue (a clap, a flash) instead.
-- **Name both tactics.** Transcription finds roughly where (±0.25 s); the waveform finds exactly where (~1 ms); agreement proves it.
-- **Ask for the evidence**, not just the answer: offset, drift check, still frames.
-- **Mention fps differences** (here 30 vs 60 fps) so Claude checks for drift.
-- **Say what you want to see and hear**: which shot is the base, where the inset goes, which clip's audio plays.
-- **Re-measure, don't guess**: if you swap in new clips, run `npm run sync:transcript`, `npm run sync:waveform`, `npm run sync:verify`, then update `src/sync.ts`.
+## How the line-up was done (two tactics, cross-checked)
+| Tactic | Command | Result |
+|---|---|---|
+| Transcription (local Whisper word timestamps, shared-word voting) | `npm run sync:transcript` | −9.78 s (±0.25) |
+| Waveform cross-correlation + 2 s windowed drift check | `npm run sync:waveform`, `npm run sync:verify` | −9.782 s, 18/18 windows, ±1 ms |
+
+Result: **B started 9.78 s before A** (−293 frames @30fps), stored in `src/lib/sync.ts`.
+
+## Layout (pattern: lowercase kebab-case, `{kind}-{id}`)
+```
+public/video/shot-{id}.mp4        data/transcripts/shot-{id}.json
+scripts/sync-{transcript|waveform|verify}.mjs
+src/lib/{sync,timeline}.ts        src/compositions/{Root,Multicam,PiP}.tsx     src/web/main.tsx
+prompts/line-up-shots.md          CLAUDE.md          index.html -> docs/
+```
+See [`CLAUDE.md`](CLAUDE.md) for conventions and gotchas.
+
+## Prompt for next time
+The full reusable prompt (goal, dependencies, both tactics, rules, verification, delivery) is in
+[`prompts/line-up-shots.md`](prompts/line-up-shots.md) and on the live page with a **Copy prompt** button.

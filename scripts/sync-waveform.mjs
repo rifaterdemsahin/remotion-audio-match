@@ -1,9 +1,9 @@
 // Measures how far shot B's audio is offset from shot A's by cross-correlation.
-// Usage: node scripts/sync.mjs [public/shot-a.mp4] [public/shot-b.mp4]
-// Prints the offset to paste into src/sync.ts (positive = B starts after A).
+// Usage: node scripts/sync-waveform.mjs [public/video/shot-a.mp4] [public/video/shot-b.mp4]
+// Prints the offset to paste into src/lib/sync.ts (positive = B starts after A).
 import {execFileSync} from 'node:child_process';
 
-const [fa = 'public/shot-a.mp4', fb = 'public/shot-b.mp4'] = process.argv.slice(2);
+const [fa = 'public/video/shot-a.mp4', fb = 'public/video/shot-b.mp4'] = process.argv.slice(2);
 const SR = 8000;
 const pcm = f => {
   const b = execFileSync('ffmpeg', ['-v', 'error', '-i', f, '-ac', '1', '-ar', String(SR), '-f', 'f32le', '-'], {maxBuffer: 1 << 28});

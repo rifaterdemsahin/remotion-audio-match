@@ -1,8 +1,14 @@
 import {Player, PlayerRef} from '@remotion/player';
 import {createRoot} from 'react-dom/client';
 import {useEffect, useRef, useState} from 'react';
-import {AudioId, FPS, Multicam, ShotId, TOTAL_FRAMES, defaultProps} from './Multicam';
-import {PiP, pipDefaults} from './PiP';
+import {AudioId, FPS, ShotId, TOTAL_FRAMES} from '../lib/timeline';
+import {Multicam, defaultProps} from '../compositions/Multicam';
+import {PiP, pipDefaults} from '../compositions/PiP';
+import prompt from '../../prompts/line-up-shots.md?raw';
+
+// staticFile() builds absolute URLs (/video/x.mp4). On GitHub Pages the site lives under
+// /<repo>/, so point Remotion's static base at wherever this page is served from.
+(window as any).remotion_staticBase = new URL('.', document.baseURI).pathname.replace(/\/$/, '');
 
 const Pick = <T extends string>({label, value, items, onChange}: {label: string; value: T; items: [T, string][]; onChange: (v: T) => void}) => (
   <div className="row">
@@ -60,3 +66,12 @@ const App = () => {
 };
 
 createRoot(document.getElementById('app')!).render(<App />);
+
+// Prompt box (single source: prompts/line-up-shots.md)
+const pre = document.getElementById('prompt');
+if (pre) pre.textContent = prompt;
+document.getElementById('copy-prompt')?.addEventListener('click', async e => {
+  await navigator.clipboard.writeText(prompt);
+  (e.target as HTMLButtonElement).textContent = 'Copied ✓';
+  setTimeout(() => ((e.target as HTMLButtonElement).textContent = 'Copy prompt'), 1500);
+});

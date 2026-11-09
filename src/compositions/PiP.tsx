@@ -1,5 +1,5 @@
 import {AbsoluteFill, Easing, Sequence, Video, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
-import {DUR_A, DUR_B, FPS, START_A, START_B, TOTAL_FRAMES, AudioId} from './Multicam';
+import {AudioId, DUR_A, DUR_B, SHOTS, START_A, START_B, TOTAL_FRAMES} from '../lib/timeline';
 
 export {TOTAL_FRAMES};
 export type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -44,8 +44,8 @@ const Inset: React.FC<{src: string; label: string; audible: boolean; corner: Cor
 
 export const PiP: React.FC<PiPProps> = ({audio, corner, insetWidth, insetSwapped}) => {
   // "base" runs the whole timeline; "inset" is the shorter clip that activates inside it.
-  const base = insetSwapped ? {src: 'shot-a.mp4', id: 'A' as const, start: START_A, dur: DUR_A} : {src: 'shot-b.mp4', id: 'B' as const, start: START_B, dur: DUR_B};
-  const inset = insetSwapped ? {src: 'shot-b.mp4', id: 'B' as const, start: START_B, dur: DUR_B} : {src: 'shot-a.mp4', id: 'A' as const, start: START_A, dur: DUR_A};
+  const base = insetSwapped ? {src: SHOTS.A.file, id: 'A' as const, start: START_A, dur: DUR_A} : {src: SHOTS.B.file, id: 'B' as const, start: START_B, dur: DUR_B};
+  const inset = insetSwapped ? {src: SHOTS.B.file, id: 'B' as const, start: START_B, dur: DUR_B} : {src: SHOTS.A.file, id: 'A' as const, start: START_A, dur: DUR_A};
   return (
     <AbsoluteFill style={{backgroundColor: '#000'}}>
       <Sequence name={`Base: shot ${base.id}`} from={base.start} durationInFrames={base.dur} layout="none">

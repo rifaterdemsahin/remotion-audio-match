@@ -1,7 +1,7 @@
 // Tactic 1 — transcription. Finds the offset by matching the SAME spoken words in both clips'
 // Whisper word timestamps: offset = tA - tB for every shared word, then vote for the cluster.
 // Usage: whisper a.wav b.wav --word_timestamps True --output_format json --output_dir tx
-//        node scripts/transcript-sync.mjs tx/a.json tx/b.json
+//        node scripts/sync-transcript.mjs tx/a.json tx/b.json
 import fs from 'node:fs';
 
 const words = f => JSON.parse(fs.readFileSync(f, 'utf8')).segments.flatMap(s => (s.words ?? []).map(w => ({

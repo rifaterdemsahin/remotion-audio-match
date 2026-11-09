@@ -1,9 +1,8 @@
 import {AbsoluteFill, Sequence, Video, staticFile, useCurrentFrame} from 'remotion';
-import {B_OFFSET_SECONDS} from './sync';
+import {AudioId, DUR_A, DUR_B, FPS, SHOTS, ShotId, START_A, START_B, TOTAL_FRAMES} from '../lib/timeline';
 
-export const FPS = 30;
-export type ShotId = 'A' | 'B';
-export type AudioId = ShotId | 'none';
+export {FPS, TOTAL_FRAMES};
+export type {AudioId, ShotId};
 
 // Edit list: from `at` (seconds on the lined-up timeline) onward, show `shot` and hear `audio`.
 // Edit these in Remotion Studio's props panel, or pass --props to `remotion render`.
@@ -14,16 +13,6 @@ export type MulticamProps = {
   forceShot?: ShotId | 'auto'; // optional override (used by the web page's buttons)
   forceAudio?: AudioId | 'auto';
 };
-
-// Real durations (ffprobe): A = 19.40s, B = 37.72s
-export const DUR_A = Math.round(19.4 * FPS);
-export const DUR_B = Math.round(37.7167 * FPS);
-
-// Lining up happens here, in Remotion: the timeline starts at whichever clip started first.
-const offsetB = Math.round(B_OFFSET_SECONDS * FPS); // frames, B relative to A
-export const START_A = Math.max(0, -offsetB);
-export const START_B = Math.max(0, offsetB);
-export const TOTAL_FRAMES = Math.max(START_A + DUR_A, START_B + DUR_B);
 
 const aStartSec = START_A / FPS;
 const aEndSec = (START_A + DUR_A) / FPS;
@@ -63,10 +52,10 @@ export const Multicam: React.FC<MulticamProps> = ({cuts, forceShot = 'auto', for
   return (
     <AbsoluteFill style={{backgroundColor: '#000'}}>
       <Sequence name="Shot A (synced)" from={START_A} durationInFrames={DUR_A} layout="none">
-        <Layer src="shot-a.mp4" visible={shot === 'A'} audible={audio === 'A'} />
+        <Layer src={SHOTS.A.file} visible={shot === 'A'} audible={audio === 'A'} />
       </Sequence>
       <Sequence name="Shot B (synced)" from={START_B} durationInFrames={DUR_B} layout="none">
-        <Layer src="shot-b.mp4" visible={shot === 'B'} audible={audio === 'B'} />
+        <Layer src={SHOTS.B.file} visible={shot === 'B'} audible={audio === 'B'} />
       </Sequence>
     </AbsoluteFill>
   );

@@ -1,5 +1,6 @@
 import {Composition} from 'remotion';
-import {FPS, Multicam, TOTAL_FRAMES, defaultProps} from './Multicam';
+import {FPS, TOTAL_FRAMES} from '../lib/timeline';
+import {Multicam, defaultProps} from './Multicam';
 import {PiP, pipDefaults} from './PiP';
 
 export const Root = () => (
