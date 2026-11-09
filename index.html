@@ -31,18 +31,18 @@
 
   <div id="app"></div>
 
-  <h2>Proof it works in Remotion Studio</h2>
+  <h2>🎞️ Proof it works in Remotion Studio</h2>
   <figure>
     <img src="/images/remotion-studio-pip.jpg" alt="Remotion Studio showing the PiP composition: shot B as the base track and shot A as an inset track starting at about 10 seconds" loading="lazy" />
     <figcaption>Remotion Studio, composition <code>PiP</code>, playhead at 0:23. The preview shows shot B full-frame with shot A activated inside it (red <b>SHOT A</b> badge). In the timeline, the <b>Base: shot B</b> track spans the whole 0:37 while <b>Inset: shot A</b> starts at ~0:09.8 and ends at ~0:29.2, which is the offset measured from the audio. The two purple audio waveforms line up with each other, so this is real, editable, renderable in Remotion.</figcaption>
   </figure>
 
-  <h2>How the shots are lined up (two tactics, cross-checked)</h2>
+  <h2>🧭 How the shots are lined up (two tactics, cross-checked)</h2>
   <p>Both clips recorded the same speech, so the audio is the sync reference. I used two independent tactics and only trusted the result because they agree.</p>
   <table>
     <tr><th>Tactic</th><th>What it does</th><th>Result</th></tr>
-    <tr><td><b>1. Transcription</b></td><td>Whisper (<code>large-v3-turbo</code>, run locally) transcribes each clip with word timestamps. Every word spoken in both clips gives a vote <code>tA − tB</code>; the tallest cluster wins.</td><td>−9.78 s (±0.25)<br><span class="mut">39 of 89 matches agree</span></td></tr>
-    <tr><td><b>2. Waveform</b></td><td>Cross-correlates the raw audio (coarse pass on loudness, then fine pass on samples). Then a <b>check</b>: correlate 2 s windows across the whole overlap and confirm every window gives the same lag.</td><td>−9.782 s<br><span class="mut">18/18 windows, ±1 ms, no drift</span></td></tr>
+    <tr><td><b>1. 📝 Transcription</b></td><td>Whisper (<code>large-v3-turbo</code>, run locally) transcribes each clip with word timestamps. Every word spoken in both clips gives a vote <code>tA − tB</code>; the tallest cluster wins.</td><td>−9.78 s (±0.25)<br><span class="mut">39 of 89 matches agree</span></td></tr>
+    <tr><td><b>2. 📈 Waveform</b></td><td>Cross-correlates the raw audio (coarse pass on loudness, then fine pass on samples). Then a <b>check</b>: correlate 2 s windows across the whole overlap and confirm every window gives the same lag.</td><td>−9.782 s<br><span class="mut">18/18 windows, ±1 ms, no drift</span></td></tr>
   </table>
   <p><b>Why both?</b> Transcription understands <i>what</i> was said but is only accurate to ~0.25 s and fails on noisy speech (the small model produced gibberish). The waveform is accurate to about a millisecond but cannot tell a real match from a lucky one on its own. Transcription tells you roughly where; the waveform tells you exactly; agreement proves it. The windowed check also guards against <b>drift</b>, which matters here because the clips are 30 and 60 fps phone/screen recordings.</p>
   <p><b>Reproduce it:</b></p>
@@ -53,15 +53,15 @@ npm run sync:verify       # window-by-window check → no drift
 # then put the number in src/lib/sync.ts; Remotion does the rest</pre>
   <p><b>Other things I did:</b> started with the small Whisper model, saw it fail, and switched to <code>large-v3-turbo</code>; used the loudness-envelope pass to narrow the search before the sample-level pass; and rounded the final offset to whole frames (−293 @30fps), since Remotion places clips on frames.</p>
 
-  <h2>Picture-in-picture</h2>
+  <h2>🪟 Picture-in-picture</h2>
   <p>The <code>PiP</code> composition (<code>src/compositions/PiP.tsx</code>) shows both videos at once: the long clip B is the full-frame base, and the shorter clip A sits <b>inside</b> it. A “activates” at its lined-up start (9.78 s): it springs in with a pulsing red <b>SHOT A</b> badge, plays in sync, and shrinks away when it ends at 29.2 s. Props let you change <code>corner</code>, <code>insetWidth</code>, which <code>audio</code> you hear, or swap which clip is the big picture (<code>insetSwapped</code>). Export it with <code>npm run render:pip</code>.</p>
 
-  <h2>The prompt (copy it for next time)</h2>
-  <p>Everything needed to repeat this: goal, dependencies, both tactics, implementation rules, verification and delivery. The same text is in <code>prompts/line-up-shots.md</code>.</p>
+  <h2>📋 The prompt (copy it for next time)</h2>
+  <p>🎬 Everything needed to repeat this: 🎯 goal, 📦 dependencies, 🧭 both tactics, 🧩 implementation rules, 🔍 verification and 🚀 delivery. The same text lives in <a href="https://github.com/rifaterdemsahin/remotion-audio-match/blob/main/prompts/line-up-shots.md"><code>prompts/line-up-shots.md</code> on GitHub</a>, and this box is generated from that file.</p>
   <div class="row"><button id="copy-prompt">Copy prompt</button></div>
   <pre id="prompt"></pre>
 
-  <h2>Dependencies at a glance</h2>
+  <h2>📦 Dependencies at a glance</h2>
   <table>
     <tr><th>Need</th><th>Why</th><th>Install</th></tr>
     <tr><td><code>remotion</code>, <code>@remotion/cli</code>, <code>@remotion/player</code> 4.0.542</td><td>compositions, Studio, render, in-page player</td><td><code>npm i remotion @remotion/cli @remotion/player react react-dom</code></td></tr>

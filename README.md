@@ -34,4 +34,4 @@ See [`CLAUDE.md`](CLAUDE.md) for conventions and gotchas.
 
 ## Prompt for next time
 The full reusable prompt (goal, dependencies, both tactics, rules, verification, delivery) is in
-[`prompts/line-up-shots.md`](prompts/line-up-shots.md) and on the live page with a **Copy prompt** button.
+[`prompts/line-up-shots.md`](https://github.com/rifaterdemsahin/remotion-audio-match/blob/main/prompts/line-up-shots.md) 📋 and on the live page with a **Copy prompt** button.
